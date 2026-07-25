@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YTm3 - High Quality YouTube Audio Downloader</title>
+    <meta
+      name="description"
+      content="Download YouTube video audio in highest available quality MP3, M4A, FLAC, and WAV quickly and easily."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="app-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <img src="logo.png" alt="YTm3 Logo" class="logo-img" />
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <section class="converter-card">
+          <form id="convert-form" class="url-form">
+            <div class="input-wrapper">
+              <i class="fa-brands fa-youtube input-icon"></i>
+              <input
+                type="url"
+                id="youtube-url"
+                placeholder="Paste YouTube video URL here..."
+                autocomplete="off"
+                required
+              />
+              <button
+                type="button"
+                id="clear-btn"
+                class="icon-btn"
+                title="Clear input"
+                aria-label="Clear input"
+              >
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <button
+                type="button"
+                id="paste-btn"
+                class="secondary-btn"
+                title="Paste from clipboard"
+              >
+                <i class="fa-regular fa-clipboard"></i>
+                <span>Paste</span>
+              </button>
+            </div>
+            <button type="submit" id="submit-btn" class="primary-btn">
+              <i class="fa-solid fa-headphones"></i>
+              <span>Get Audio</span>
+            </button>
+          </form>
+        </section>
+
+        <section id="skeleton-card" class="skeleton-card hidden">
+          <div class="skeleton-layout">
+            <div class="skeleton-thumb shimmer"></div>
+            <div class="skeleton-details">
+              <div class="skeleton-line title shimmer"></div>
+              <div class="skeleton-line channel shimmer"></div>
+              <div class="skeleton-button shimmer"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="result-card" class="result-card hidden">
+          <div class="video-preview-layout">
+            <div class="thumbnail-container">
+              <img id="video-thumb" src="" alt="Video thumbnail" />
+              <span id="video-duration" class="duration-badge">00:00</span>
+            </div>
+            <div class="video-info">
+              <h2 id="video-title" class="video-title">Video Title</h2>
+              <p id="video-channel" class="video-channel">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Channel Name</span>
+              </p>
+
+              <div class="audio-player-wrapper">
+                <label class="section-label">Audio Preview:</label>
+                <audio id="audio-preview" controls preload="none"></audio>
+              </div>
+
+              <div class="action-row">
+                <a
+                  id="download-action-btn"
+                  href="#"
+                  target="_blank"
+                  class="download-now-btn"
+                >
+                  <i class="fa-solid fa-download"></i>
+                  <span>Download Audio</span>
+                </a>
+                <button
+                  type="button"
+                  id="copy-link-btn"
+                  class="secondary-action-btn"
+                >
+                  <i class="fa-solid fa-link"></i>
+                  <span>Copy Link</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-sliders"></i></div>
+            <h3>Max Bitrate</h3>
+            <p>
+              Extract crystal-clear 320kbps audio directly from original video
+              streams.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3>Safe & Private</h3>
+            <p>
+              No registration, no tracking, and direct browser-side conversion
+              engine.
+            </p>
+          </div>
+        </section>
+
+        <section id="history-section" class="history-section hidden">
+          <div class="history-header">
+            <h2>
+              <i class="fa-solid fa-clock-rotate-left"></i> Recent Downloads
+            </h2>
+            <button type="button" id="clear-history-btn" class="text-btn">
+              Clear History
+            </button>
+          </div>
+          <div id="history-list" class="history-list"></div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <p>&copy; 2026 YTm3. High Quality Audio Converter.</p>
+      </footer>
+    </div>
+
+    <div id="toast" class="toast hidden">
+      <i id="toast-icon" class="fa-solid fa-circle-info"></i>
+      <span id="toast-message">Notification</span>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
