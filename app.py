@@ -63,6 +63,7 @@ def get_info():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
+        'format': 'bestaudio',
         'extract_flat': False
     }
     if os.path.exists(COOKIE_FILE):
@@ -118,6 +119,7 @@ def download_audio():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
+        'format': 'bestaudio',
     }
     if os.path.exists(COOKIE_FILE):
         ydl_opts['cookiefile'] = COOKIE_FILE
@@ -172,6 +174,7 @@ def stream_audio():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
+        'format': 'bestaudio',
     }
     if os.path.exists(COOKIE_FILE):
         ydl_opts['cookiefile'] = COOKIE_FILE
