@@ -1,6 +1,9 @@
 import os
 import re
 import urllib.parse
+import tempfile
+import atexit
+import shutil
 from flask import Flask, request, jsonify, send_from_directory, Response
 import requests
 from requests.adapters import HTTPAdapter
@@ -9,7 +12,13 @@ import yt_dlp
 
 app = Flask(__name__, static_folder='.')
 
-COOKIE_FILE = 'cookies.txt'
+COOKIE_FILE = None
+if os.path.exists('cookies.txt'):
+    dst = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
+    shutil.copy2('cookies.txt', dst.name)
+    dst.close()
+    COOKIE_FILE = dst.name
+    atexit.register(lambda p=COOKIE_FILE: os.unlink(p))
 
 session = requests.Session()
 retry = Retry(total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504])
