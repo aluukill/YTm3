@@ -44,6 +44,23 @@ def format_duration(seconds):
         return f"{h:02d}:{m:02d}:{s:02d}"
     return f"{m:02d}:{s:02d}"
 
+
+ERROR_GUESS = {
+    'sign in': 'YouTube cookies have expired or are invalid. Please export fresh cookies from your browser and replace cookies.txt.',
+    'not a bot': 'YouTube is blocking requests due to suspected bot activity. Please export fresh cookies from your browser and replace cookies.txt.',
+    'no video formats': 'No downloadable formats found for this video.',
+    'no audio stream': 'No audio stream is available for this video.',
+    'geo': 'This video is geo-restricted and cannot be accessed with the current cookies.',
+}
+
+
+def friendly_error(msg):
+    lower = msg.lower()
+    for key, hint in ERROR_GUESS.items():
+        if key in lower:
+            return hint
+    return None
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')
@@ -106,7 +123,8 @@ def get_info():
                 'formats': audio_formats
             })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        err = friendly_error(str(e)) or str(e)
+        return jsonify({'error': err}), 500
 
 @app.route('/api/download')
 def download_audio():
@@ -162,7 +180,8 @@ def download_audio():
             return Response(generate(), headers=headers, status=200)
 
     except Exception as e:
-        return f"Error downloading audio: {str(e)}", 500
+        err = friendly_error(str(e)) or str(e)
+        return f"Error downloading audio: {err}", 500
 
 @app.route('/api/stream')
 def stream_audio():
@@ -197,7 +216,8 @@ def stream_audio():
             r = session.get(stream_url, stream=True, timeout=30)
             return Response(r.iter_content(chunk_size=CHUNK_SIZE), content_type=f'audio/{ext}')
     except Exception as e:
-        return str(e), 500
+        err = friendly_error(str(e)) or str(e)
+        return err, 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
