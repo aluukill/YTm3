@@ -118,7 +118,6 @@ def download_audio():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
-        'format': 'bestaudio/best'
     }
     if os.path.exists(COOKIE_FILE):
         ydl_opts['cookiefile'] = COOKIE_FILE
@@ -173,7 +172,6 @@ def stream_audio():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
-        'format': 'bestaudio/best'
     }
     if os.path.exists(COOKIE_FILE):
         ydl_opts['cookiefile'] = COOKIE_FILE
