@@ -2,7 +2,7 @@
 
 A lightweight, high-performance web application to convert and download audio from YouTube videos in maximum available quality. Built with Python (Flask), `yt-dlp`, and modern Vanilla HTML5/CSS3/JavaScript.
 <p align="center">
-  <img src="logo.png" alt="YTm3 Logo" height="60" />
+  <img src="logo.png" alt="YTm3 Logo" height="200" />
 </p>
 ## Features
 
