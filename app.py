@@ -1,8 +1,6 @@
 import os
 import re
 import urllib.parse
-import tempfile
-import atexit
 from flask import Flask, request, jsonify, send_from_directory, Response
 import requests
 from requests.adapters import HTTPAdapter
@@ -11,40 +9,7 @@ import yt_dlp
 
 app = Flask(__name__, static_folder='.')
 
-_COOKIE_FILE = None
-
-def _load_cookies():
-    cookies = os.environ.get('YOUTUBE_COOKIES')
-    if cookies:
-        return cookies
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
-    if os.path.exists(env_path):
-        with open(env_path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-        for i, line in enumerate(lines):
-            if line.startswith('YOUTUBE_COOKIES='):
-                value = line[len('YOUTUBE_COOKIES='):]
-                if value:
-                    return value + ''.join(lines[i+1:])
-                return ''.join(lines[i+1:])
-    return None
-
-def _init_cookies():
-    global _COOKIE_FILE
-    cookies = _load_cookies()
-    if cookies:
-        f = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
-        f.write(cookies)
-        f.close()
-        _COOKIE_FILE = f.name
-
-def _cleanup_cookies():
-    global _COOKIE_FILE
-    if _COOKIE_FILE and os.path.exists(_COOKIE_FILE):
-        os.unlink(_COOKIE_FILE)
-
-_init_cookies()
-atexit.register(_cleanup_cookies)
+COOKIE_FILE = 'cookies.txt'
 
 session = requests.Session()
 retry = Retry(total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504])
@@ -91,8 +56,8 @@ def get_info():
         'noplaylist': True,
         'extract_flat': False
     }
-    if _COOKIE_FILE:
-        ydl_opts['cookiefile'] = _COOKIE_FILE
+    if os.path.exists(COOKIE_FILE):
+        ydl_opts['cookiefile'] = COOKIE_FILE
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -146,8 +111,8 @@ def download_audio():
         'noplaylist': True,
         'format': 'bestaudio/best'
     }
-    if _COOKIE_FILE:
-        ydl_opts['cookiefile'] = _COOKIE_FILE
+    if os.path.exists(COOKIE_FILE):
+        ydl_opts['cookiefile'] = COOKIE_FILE
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -201,8 +166,8 @@ def stream_audio():
         'noplaylist': True,
         'format': 'bestaudio/best'
     }
-    if _COOKIE_FILE:
-        ydl_opts['cookiefile'] = _COOKIE_FILE
+    if os.path.exists(COOKIE_FILE):
+        ydl_opts['cookiefile'] = COOKIE_FILE
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
