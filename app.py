@@ -80,8 +80,13 @@ def get_info():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
-        'format': 'bestaudio',
-        'extract_flat': False
+        'format': 'bestaudio/best',
+        'extract_flat': False,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['web', 'mweb', 'android', 'ios'],
+            }
+        }
     }
     if os.path.exists(COOKIE_FILE):
         ydl_opts['cookiefile'] = COOKIE_FILE
@@ -137,7 +142,12 @@ def download_audio():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
-        'format': 'bestaudio',
+        'format': 'bestaudio/best',
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['web', 'mweb', 'android', 'ios'],
+            }
+        }
     }
     if os.path.exists(COOKIE_FILE):
         ydl_opts['cookiefile'] = COOKIE_FILE
@@ -193,7 +203,12 @@ def stream_audio():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
-        'format': 'bestaudio',
+        'format': 'bestaudio/best',
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['web', 'mweb', 'android', 'ios'],
+            }
+        }
     }
     if os.path.exists(COOKIE_FILE):
         ydl_opts['cookiefile'] = COOKIE_FILE
