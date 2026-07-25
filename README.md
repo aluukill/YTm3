@@ -1,9 +1,9 @@
 # YTm3 — YouTube Audio Converter & Downloader
 
 A lightweight, high-performance web application to convert and download audio from YouTube videos in maximum available quality. Built with Python (Flask), `yt-dlp`, and modern Vanilla HTML5/CSS3/JavaScript.
-
-![YTm3 Preview](logo.png)
-
+<p align="center">
+  <img src="logo.png" alt="YTm3 Logo" height="60" />
+</p>
 ## Features
 
 - **Max Quality Extraction**: Automatically detects and streams the highest available bitrate audio directly from YouTube.
