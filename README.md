@@ -27,7 +27,7 @@ A lightweight, high-performance web application to convert and download audio fr
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/YTm3.git
+git clone https://github.com/aluukill/YTm3.git
 cd YTm3
 ```
 
