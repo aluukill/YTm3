@@ -4,11 +4,15 @@ import urllib.parse
 import tempfile
 import atexit
 import shutil
+import logging
 from flask import Flask, request, jsonify, send_from_directory, Response
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import yt_dlp
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='.')
 
@@ -34,6 +38,25 @@ session.headers.update({
 })
 
 CHUNK_SIZE = 1048576  # 1MB
+
+
+def _base_ydl_opts(format_selector=None):
+    """Build base yt-dlp options shared across all endpoints."""
+    opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'noplaylist': True,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['default', 'mweb'],
+            }
+        }
+    }
+    if format_selector:
+        opts['format'] = format_selector
+    if COOKIE_FILE and os.path.exists(COOKIE_FILE):
+        opts['cookiefile'] = COOKIE_FILE
+    return opts
 
 def format_duration(seconds):
     if not seconds:
@@ -76,20 +99,8 @@ def get_info():
     if not url:
         return jsonify({'error': 'URL is required'}), 400
 
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'noplaylist': True,
-        'format': 'bestaudio*',
-        'extract_flat': False,
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['ios', 'android_creator', 'web_creator', 'mweb'],
-            }
-        }
-    }
-    if os.path.exists(COOKIE_FILE):
-        ydl_opts['cookiefile'] = COOKIE_FILE
+    ydl_opts = _base_ydl_opts()  # No format filter — we just want metadata + format list
+    ydl_opts['extract_flat'] = False
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -138,19 +149,7 @@ def download_audio():
     if not url:
         return "URL parameter missing", 400
 
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'noplaylist': True,
-        'format': 'bestaudio*',
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['ios', 'android_creator', 'web_creator', 'mweb'],
-            }
-        }
-    }
-    if os.path.exists(COOKIE_FILE):
-        ydl_opts['cookiefile'] = COOKIE_FILE
+    ydl_opts = _base_ydl_opts('bestaudio/best')
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -199,19 +198,7 @@ def stream_audio():
     if not url:
         return "URL parameter missing", 400
 
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'noplaylist': True,
-        'format': 'bestaudio*',
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['ios', 'android_creator', 'web_creator', 'mweb'],
-            }
-        }
-    }
-    if os.path.exists(COOKIE_FILE):
-        ydl_opts['cookiefile'] = COOKIE_FILE
+    ydl_opts = _base_ydl_opts('bestaudio/best')
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
