@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__, static_folder='.')
 
 COOKIE_FILE = None
-if os.path.exists('cookies.txt'):
+if os.path.exists('COOKIES.txt'):
     dst = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
-    shutil.copy2('cookies.txt', dst.name)
+    shutil.copy2('COOKIES.txt', dst.name)
     dst.close()
     COOKIE_FILE = dst.name
     atexit.register(lambda p=COOKIE_FILE: os.unlink(p))
@@ -69,8 +69,8 @@ def format_duration(seconds):
 
 
 ERROR_GUESS = {
-    'sign in': 'YouTube cookies have expired or are invalid. Please export fresh cookies from your browser and replace cookies.txt.',
-    'not a bot': 'YouTube is blocking requests due to suspected bot activity. Please export fresh cookies from your browser and replace cookies.txt.',
+    'sign in': 'YouTube cookies have expired or are invalid. Please export fresh cookies from your browser and replace COOKIES.txt.',
+    'not a bot': 'YouTube is blocking requests due to suspected bot activity. Please export fresh cookies from your browser and replace COOKIES.txt.',
     'no video formats': 'No downloadable formats found for this video.',
     'no audio stream': 'No audio stream is available for this video.',
     'geo': 'This video is geo-restricted and cannot be accessed with the current cookies.',
