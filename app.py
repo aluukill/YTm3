@@ -80,11 +80,11 @@ def get_info():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
-        'format': 'bestaudio/best',
+        'format': 'bestaudio*',
         'extract_flat': False,
         'extractor_args': {
             'youtube': {
-                'player_client': ['web', 'mweb', 'android', 'ios'],
+                'player_client': ['ios', 'android_creator', 'web_creator', 'mweb'],
             }
         }
     }
@@ -142,10 +142,10 @@ def download_audio():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
-        'format': 'bestaudio/best',
+        'format': 'bestaudio*',
         'extractor_args': {
             'youtube': {
-                'player_client': ['web', 'mweb', 'android', 'ios'],
+                'player_client': ['ios', 'android_creator', 'web_creator', 'mweb'],
             }
         }
     }
@@ -203,10 +203,10 @@ def stream_audio():
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
-        'format': 'bestaudio/best',
+        'format': 'bestaudio*',
         'extractor_args': {
             'youtube': {
-                'player_client': ['web', 'mweb', 'android', 'ios'],
+                'player_client': ['ios', 'android_creator', 'web_creator', 'mweb'],
             }
         }
     }
