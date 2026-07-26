@@ -73,6 +73,7 @@ ERROR_GUESS = {
     'not a bot': 'YouTube is blocking requests due to suspected bot activity. Please export fresh cookies from your browser and replace COOKIES.txt.',
     'no video formats': 'No downloadable formats found for this video.',
     'no audio stream': 'No audio stream is available for this video.',
+    'requested format': 'The requested format is not available. The app will try to find the best available stream.',
     'geo': 'This video is geo-restricted and cannot be accessed with the current cookies.',
 }
 
@@ -149,7 +150,7 @@ def download_audio():
     if not url:
         return "URL parameter missing", 400
 
-    ydl_opts = _base_ydl_opts('bestaudio/best')
+    ydl_opts = _base_ydl_opts()
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -198,7 +199,7 @@ def stream_audio():
     if not url:
         return "URL parameter missing", 400
 
-    ydl_opts = _base_ydl_opts('bestaudio/best')
+    ydl_opts = _base_ydl_opts()
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
