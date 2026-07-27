@@ -37,18 +37,17 @@ session.headers.update({
     'Connection': 'keep-alive'
 })
 
-CHUNK_SIZE = 1048576  # 1MB
+CHUNK_SIZE = 1048576
 
 
 def _base_ydl_opts(format_selector=None):
-    """Build base yt-dlp options shared across all endpoints."""
     opts = {
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
         'extractor_args': {
             'youtube': {
-                'player_client': ['default', 'mweb'],
+                'player_client': ['default', 'mweb', 'android', 'web'],
             }
         }
     }
@@ -73,7 +72,7 @@ ERROR_GUESS = {
     'not a bot': 'YouTube is blocking requests due to suspected bot activity. Please export fresh cookies from your browser and replace COOKIES.txt.',
     'no video formats': 'No downloadable formats found for this video.',
     'no audio stream': 'No audio stream is available for this video.',
-    'requested format': 'The requested format is not available. The app will try to find the best available stream.',
+    'requested format': 'The requested format is not available. Trying alternative sources...',
     'geo': 'This video is geo-restricted and cannot be accessed with the current cookies.',
 }
 
@@ -84,6 +83,37 @@ def friendly_error(msg):
         if key in lower:
             return hint
     return None
+
+
+def _find_best_audio_stream(info):
+    formats = info.get('formats', [])
+
+    streams = [f for f in formats if f.get('vcodec') == 'none' and f.get('url')]
+    if streams:
+        streams.sort(key=lambda x: x.get('abr') or x.get('tbr') or 0, reverse=True)
+        return streams[0]
+
+    streams = [f for f in formats if f.get('acodec') and f.get('acodec') != 'none' and f.get('url')]
+    if streams:
+        streams.sort(key=lambda x: x.get('abr') or x.get('tbr') or 0, reverse=True)
+        return streams[0]
+
+    streams = [f for f in formats if f.get('url')]
+    if streams:
+        streams.sort(key=lambda x: x.get('tbr') or 0, reverse=True)
+        return streams[0]
+
+    return None
+
+
+def _extract_info(url, format_selector=None):
+    ydl_opts = _base_ydl_opts(format_selector=format_selector)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        if 'entries' in info and len(info['entries']) > 0:
+            info = info['entries'][0]
+        return info
+
 
 @app.route('/')
 def index():
@@ -100,45 +130,39 @@ def get_info():
     if not url:
         return jsonify({'error': 'URL is required'}), 400
 
-    ydl_opts = _base_ydl_opts()  # No format filter — we just want metadata + format list
-    ydl_opts['extract_flat'] = False
-
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            if 'entries' in info and len(info['entries']) > 0:
-                info = info['entries'][0]
+        info = _extract_info(url)
 
-            video_id = info.get('id')
-            title = info.get('title')
-            uploader = info.get('uploader') or info.get('channel') or 'YouTube Creator'
-            duration_sec = info.get('duration')
-            duration_str = format_duration(duration_sec)
-            thumbnail = info.get('thumbnail') or f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+        video_id = info.get('id')
+        title = info.get('title')
+        uploader = info.get('uploader') or info.get('channel') or 'YouTube Creator'
+        duration_sec = info.get('duration')
+        duration_str = format_duration(duration_sec)
+        thumbnail = info.get('thumbnail') or f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
 
-            audio_formats = []
-            formats = info.get('formats', [])
-            for f in formats:
-                if f.get('vcodec') == 'none' and f.get('url'):
-                    ext = f.get('ext', 'm4a')
-                    abr = f.get('abr') or f.get('tbr') or 128
-                    audio_formats.append({
-                        'format_id': f.get('format_id'),
-                        'ext': ext,
-                        'abr': int(abr),
-                        'filesize': f.get('filesize') or f.get('filesize_approx') or 0
-                    })
+        audio_formats = []
+        formats = info.get('formats', [])
+        for f in formats:
+            if f.get('vcodec') == 'none' and f.get('url'):
+                ext = f.get('ext', 'm4a')
+                abr = f.get('abr') or f.get('tbr') or 128
+                audio_formats.append({
+                    'format_id': f.get('format_id'),
+                    'ext': ext,
+                    'abr': int(abr),
+                    'filesize': f.get('filesize') or f.get('filesize_approx') or 0
+                })
 
-            audio_formats.sort(key=lambda x: x['abr'], reverse=True)
+        audio_formats.sort(key=lambda x: x['abr'], reverse=True)
 
-            return jsonify({
-                'id': video_id,
-                'title': title,
-                'author': uploader,
-                'duration': duration_str,
-                'thumbnail': thumbnail,
-                'formats': audio_formats
-            })
+        return jsonify({
+            'id': video_id,
+            'title': title,
+            'author': uploader,
+            'duration': duration_str,
+            'thumbnail': thumbnail,
+            'formats': audio_formats
+        })
     except Exception as e:
         err = friendly_error(str(e)) or str(e)
         return jsonify({'error': err}), 500
@@ -150,44 +174,49 @@ def download_audio():
     if not url:
         return "URL parameter missing", 400
 
-    ydl_opts = _base_ydl_opts()
-
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            if 'entries' in info and len(info['entries']) > 0:
-                info = info['entries'][0]
+        info = _extract_info(url)
 
-            title = info.get('title', 'audio')
-            clean_title = re.sub(r'[^\w\s-]', '', title).strip() or 'audio'
-            
-            formats = info.get('formats', [])
-            audio_streams = [f for f in formats if f.get('vcodec') == 'none' and f.get('url')]
-            
-            if not audio_streams:
-                return "No audio stream found", 404
+        title = info.get('title', 'audio')
+        clean_title = re.sub(r'[^\w\s-]', '', title).strip() or 'audio'
 
-            audio_streams.sort(key=lambda x: x.get('abr') or x.get('tbr') or 0, reverse=True)
-            chosen_stream = audio_streams[0]
-            stream_url = chosen_stream.get('url')
-            ext = chosen_stream.get('ext', 'm4a')
+        chosen_stream = _find_best_audio_stream(info)
 
-            r = session.get(stream_url, stream=True, timeout=30)
+        if not chosen_stream:
+            try:
+                info2 = _extract_info(url, format_selector='bestaudio/best')
+                if info2.get('requested_formats'):
+                    chosen_stream = info2['requested_formats'][0]
+                elif info2.get('url'):
+                    chosen_stream = info2
+            except Exception:
+                pass
 
-            def generate():
-                for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
-                    if chunk:
-                        yield chunk
+        if not chosen_stream:
+            return "No audio stream found", 404
 
-            filename = f"{clean_title}.{ext}"
-            encoded_filename = urllib.parse.quote(filename)
+        stream_url = chosen_stream.get('url')
+        ext = chosen_stream.get('ext', 'm4a')
 
-            headers = {
-                'Content-Type': f'audio/{ext}',
-                'Content-Disposition': f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
-            }
+        if not stream_url:
+            return "No stream URL found", 404
 
-            return Response(generate(), headers=headers, status=200)
+        r = session.get(stream_url, stream=True, timeout=30)
+
+        def generate():
+            for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
+                if chunk:
+                    yield chunk
+
+        filename = f"{clean_title}.{ext}"
+        encoded_filename = urllib.parse.quote(filename)
+
+        headers = {
+            'Content-Type': f'audio/{ext}',
+            'Content-Disposition': f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
+        }
+
+        return Response(generate(), headers=headers, status=200)
 
     except Exception as e:
         err = friendly_error(str(e)) or str(e)
@@ -199,25 +228,32 @@ def stream_audio():
     if not url:
         return "URL parameter missing", 400
 
-    ydl_opts = _base_ydl_opts()
-
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            if 'entries' in info and len(info['entries']) > 0:
-                info = info['entries'][0]
+        info = _extract_info(url)
 
-            formats = info.get('formats', [])
-            audio_streams = [f for f in formats if f.get('vcodec') == 'none' and f.get('url')]
-            if not audio_streams:
-                return "No stream found", 404
+        chosen_stream = _find_best_audio_stream(info)
 
-            audio_streams.sort(key=lambda x: x.get('abr') or x.get('tbr') or 0, reverse=True)
-            stream_url = audio_streams[0].get('url')
-            ext = audio_streams[0].get('ext', 'm4a')
+        if not chosen_stream:
+            try:
+                info2 = _extract_info(url, format_selector='bestaudio/best')
+                if info2.get('requested_formats'):
+                    chosen_stream = info2['requested_formats'][0]
+                elif info2.get('url'):
+                    chosen_stream = info2
+            except Exception:
+                pass
 
-            r = session.get(stream_url, stream=True, timeout=30)
-            return Response(r.iter_content(chunk_size=CHUNK_SIZE), content_type=f'audio/{ext}')
+        if not chosen_stream:
+            return "No stream found", 404
+
+        stream_url = chosen_stream.get('url')
+        ext = chosen_stream.get('ext', 'm4a')
+
+        if not stream_url:
+            return "No stream URL found", 404
+
+        r = session.get(stream_url, stream=True, timeout=30)
+        return Response(r.iter_content(chunk_size=CHUNK_SIZE), content_type=f'audio/{ext}')
     except Exception as e:
         err = friendly_error(str(e)) or str(e)
         return err, 500
