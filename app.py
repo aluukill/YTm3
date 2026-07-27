@@ -6,6 +6,7 @@ import atexit
 import shutil
 import logging
 from flask import Flask, request, jsonify, send_from_directory, Response
+from flask_cors import CORS
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -15,6 +16,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='.')
+CORS(app, origins=[
+    'https://ytm3.vercel.app',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+])
 
 COOKIE_FILE = None
 if os.path.exists('COOKIES.txt'):
@@ -34,7 +40,8 @@ session.headers.update({
     'Accept': '*/*',
     'Accept-Language': 'en-US,en;q=0.9',
     'Accept-Encoding': 'gzip, deflate, br',
-    'Connection': 'keep-alive'
+    'Connection': 'keep-alive',
+    'ngrok-skip-browser-warning': 'true',
 })
 
 CHUNK_SIZE = 1048576
@@ -122,6 +129,11 @@ def index():
 @app.route('/<path:path>')
 def static_files(path):
     return send_from_directory('.', path)
+
+@app.route('/api/status')
+def api_status():
+    return jsonify({'status': 'ok'})
+
 
 @app.route('/api/info', methods=['POST'])
 def get_info():

@@ -16,9 +16,25 @@ A lightweight, high-performance web application to convert and download audio fr
 
 ---
 
+## Architecture
+
+```
+┌─────────────────────┐         ┌─────────────────────────────┐
+│   Vercel (Frontend) │  ──►   │   Your PC (Backend)         │
+│   ytm3.vercel.app   │  API   │   Flask + yt-dlp + ngrok    │
+│   index.html        │  calls │   YouTube requests go from   │
+│   script.js         │         │   your home IP               │
+│   style.css         │         │                               │
+└─────────────────────┘         └─────────────────────────────┘
+```
+
+The frontend is hosted on Vercel. The backend runs on your PC and is exposed to the internet via a tunnel (ngrok / Cloudflare Tunnel). This way, all YouTube API requests originate from your home IP, avoiding cloud-IP blocks.
+
+---
+
 ## Tech Stack
 
-- **Backend**: Python 3.10+, Flask, `yt-dlp`, `requests`, `gunicorn`
+- **Backend**: Python 3.10+, Flask, Flask-CORS, `yt-dlp`, `requests`, `gunicorn`
 - **Frontend**: HTML5, Vanilla CSS3 (Custom Design System), JavaScript (ES6+)
 - **Icons & Typography**: Font Awesome 6, Google Fonts (Poppins)
 
@@ -72,23 +88,65 @@ Open [http://localhost:5000](http://localhost:5000) in your web browser.
 
 ---
 
-## Production Deployment
+## Hybrid Deployment (Vercel + Your PC)
 
-### Using Gunicorn (Linux/Unix)
+This is the recommended setup. The frontend runs on Vercel while your PC serves as the backend, using your home IP for YouTube requests.
+
+### Step 1 — Deploy frontend to Vercel
+
+1. Push your repo to GitHub.
+2. Go to [vercel.com](https://vercel.com), import the repo.
+3. Vercel will detect the static frontend and deploy it to `ytm3.vercel.app`.
+4. No special build settings needed — `vercel.json` handles this automatically.
+
+### Step 2 — Run backend on your PC
 
 ```bash
-gunicorn app:app --workers 4 --threads 2 --timeout 120
+pip install -r requirements.txt
+python app.py
 ```
 
-### Deploying to Cloud Platforms (Render, Railway, Heroku)
+The Flask server starts on `http://localhost:5000`.
 
-The project includes a `Procfile` and dynamic `PORT` environment variable binding out-of-the-box. Simply connect your GitHub repository to your cloud platform and select **Python Environment**.
+### Step 3 — Expose your PC to the internet
 
-**Note**: `COOKIES.txt` is included in the repository, so it will be deployed automatically. If the included cookies expire, replace them with a fresh export and commit the update.
+Use **ngrok** or **Cloudflare Tunnel** to give your local server a public URL:
+
+**Option A — ngrok:**
+```bash
+ngrok http 5000
+```
+This gives you a URL like `https://abc123.ngrok-free.app`.
+
+**Option B — Cloudflare Tunnel:**
+```bash
+cloudflared tunnel --url http://localhost:5000
+```
+This gives you a URL like `https://your-tunnel.trycloudflare.com`.
+
+### Step 4 — Update frontend config
+
+Edit `config.js` and set your tunnel URL:
+
+```js
+const BACKEND_URL = "https://abc123.ngrok-free.app";
+```
+
+Commit and push. Vercel auto-deploys. Your frontend now sends API requests to your PC.
+
+---
+
+## Local Development (Full Stack on One Machine)
+
+When `BACKEND_URL` is empty in `config.js`, the frontend uses relative paths (`/api/...`) and the Flask server serves everything. This is the default for local development.
 
 ---
 
 ## API Reference
+
+### `GET /api/status`
+
+Health check endpoint. Returns `{"status": "ok"}`.
 
 ### `POST /api/info`
 
@@ -116,11 +174,13 @@ Downloads the highest quality audio track as a file attachment.
 ```text
 YTm3/
 ├── app.py              # Flask backend server & yt-dlp wrapper
+├── config.js           # Backend URL configuration for frontend
 ├── index.html          # Frontend web layout
 ├── style.css           # Custom CSS design system
 ├── script.js           # Client-side logic & API integration
 ├── COOKIES.txt         # YouTube session cookies (Netscape format)
 ├── logo.png            # App logo asset
+├── vercel.json         # Vercel deployment config (static frontend)
 ├── requirements.txt    # Python dependencies
 ├── Procfile            # Deployment process definition
 ├── .gitignore          # Git exclusion rules

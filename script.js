@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     submitBtn.disabled = true;
 
     try {
-      const response = await fetch("/api/info", {
+      const response = await fetch(`${BACKEND_URL}/api/info`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,8 +127,8 @@ document.addEventListener("DOMContentLoaded", () => {
       videoChannel.textContent = currentVideoData.author;
       videoDuration.textContent = currentVideoData.duration;
 
-      const streamEndpoint = `/api/stream?url=${encodeURIComponent(cleanUrl)}`;
-      const downloadEndpoint = `/api/download?url=${encodeURIComponent(cleanUrl)}`;
+      const streamEndpoint = `${BACKEND_URL}/api/stream?url=${encodeURIComponent(cleanUrl)}`;
+      const downloadEndpoint = `${BACKEND_URL}/api/download?url=${encodeURIComponent(cleanUrl)}`;
 
       audioPreview.src = streamEndpoint;
       downloadActionBtn.href = downloadEndpoint;
