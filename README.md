@@ -88,9 +88,9 @@ Push to GitHub, import the repo on [vercel.com](https://vercel.com). It auto-dep
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/status` | Health check |
-| `POST` | `/api/info` | Fetch video metadata (title, thumbnail, duration, audio formats) |
-| `GET` | `/api/stream?url=...` | Stream audio for inline preview |
-| `GET` | `/api/download?url=...` | Download audio as file attachment |
+| `POST` | `/api/info` | Fetch video metadata + direct stream URL |
+
+The `/api/info` response includes a `stream_url` field pointing directly to YouTube's CDN. The browser downloads audio straight from YouTube — no proxying through the backend.
 
 ---
 

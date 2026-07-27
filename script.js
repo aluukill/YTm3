@@ -120,6 +120,8 @@ document.addEventListener("DOMContentLoaded", () => {
         duration: data.duration || "00:00",
         thumbnail:
           data.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        stream_url: data.stream_url,
+        ext: data.ext || "m4a",
       };
 
       videoThumb.src = currentVideoData.thumbnail;
@@ -127,11 +129,9 @@ document.addEventListener("DOMContentLoaded", () => {
       videoChannel.textContent = currentVideoData.author;
       videoDuration.textContent = currentVideoData.duration;
 
-      const streamEndpoint = `${BACKEND_URL}/api/stream?url=${encodeURIComponent(cleanUrl)}`;
-      const downloadEndpoint = `${BACKEND_URL}/api/download?url=${encodeURIComponent(cleanUrl)}`;
-
-      audioPreview.src = streamEndpoint;
-      downloadActionBtn.href = downloadEndpoint;
+      audioPreview.src = currentVideoData.stream_url;
+      downloadActionBtn.href = currentVideoData.stream_url;
+      downloadActionBtn.download = `${currentVideoData.title}.${currentVideoData.ext}`;
       downloadActionBtn.removeAttribute("target");
 
       skeletonCard.classList.add("hidden");
