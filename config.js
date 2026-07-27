@@ -1,1 +1,1 @@
-const BACKEND_URL = "https://slowly-dynamic-bought-documents.trycloudflare.com";
+const BACKEND_URL = "https://logos-mission-airports-develop.trycloudflare.com";
