@@ -1,27 +1,19 @@
-# Python Bytecode & Caches
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 
-# Environments & Virtual Envs
 .venv/
 venv/
-ENV/
-env/
 .env
 
-# Downloads & Temp files
 downloads/
 *.tmp
 *.log
 
-# IDE & OS Specific
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
-# Tunnel binary
 cloudflared.exe
 ngrok.exe

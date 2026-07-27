@@ -5,7 +5,7 @@ import tempfile
 import atexit
 import shutil
 import logging
-from flask import Flask, request, jsonify, send_from_directory, Response
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import requests
 from requests.adapters import HTTPAdapter
@@ -15,7 +15,7 @@ import yt_dlp
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__, static_folder='.')
+app = Flask(__name__)
 CORS(app, origins=[
     'https://ytm3.vercel.app',
     'http://localhost:5000',
@@ -41,7 +41,6 @@ session.headers.update({
     'Accept-Language': 'en-US,en;q=0.9',
     'Accept-Encoding': 'gzip, deflate, br',
     'Connection': 'keep-alive',
-    'ngrok-skip-browser-warning': 'true',
 })
 
 CHUNK_SIZE = 1048576
@@ -121,14 +120,6 @@ def _extract_info(url, format_selector=None):
             info = info['entries'][0]
         return info
 
-
-@app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
-
-@app.route('/<path:path>')
-def static_files(path):
-    return send_from_directory('.', path)
 
 @app.route('/api/status')
 def api_status():

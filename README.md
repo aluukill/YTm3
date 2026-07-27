@@ -1,194 +1,118 @@
 # YTm3 — YouTube Audio Converter & Downloader
 
-A lightweight, high-performance web application to convert and download audio from YouTube videos in maximum available quality. Built with Python (Flask), `yt-dlp`, and modern Vanilla HTML5/CSS3/JavaScript.
+A lightweight web application to download audio from YouTube videos in maximum available quality. Built with Flask, `yt-dlp`, and vanilla HTML/CSS/JS.
 
 <p align="center">
   <img src="logo.png" alt="YTm3 Logo" height="200" />
 </p>
+
 ## Features
 
-- **Max Quality Extraction**: Automatically detects and streams the highest available bitrate audio directly from YouTube.
-- **Universal YouTube Link Support**: Robust URL parsing handles videos, shorts, live streams, `music.youtube.com`, and playlist URLs cleanly.
-- **Audio Stream Preview**: Built-in HTML5 player lets users preview the extracted audio before downloading.
-- **Pill-Rounded Minimalist UI**: Clean, light-mode interface with zero clutter.
-- **Recent Download History**: Saves your converted tracks locally in your browser's `localStorage`.
-- **Production Ready**: Configured for WSGI servers (`gunicorn`) with dynamic port binding for cloud deployments.
+- **Max Quality Extraction** — Automatically streams the highest available bitrate audio from YouTube.
+- **Universal Link Support** — Videos, shorts, live streams, and music.youtube.com.
+- **Audio Preview** — Built-in HTML5 player for previewing before download.
+- **Download History** — Recent conversions saved in browser localStorage.
+- **Minimal UI** — Clean, light-mode interface.
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────┐         ┌─────────────────────────────┐
-│   Vercel (Frontend) │  ──►   │   Your PC (Backend)         │
-│   ytm3.vercel.app   │  API   │   Flask + yt-dlp + ngrok    │
-│   index.html        │  calls │   YouTube requests go from   │
-│   script.js         │         │   your home IP               │
-│   style.css         │         │                               │
-└─────────────────────┘         └─────────────────────────────┘
+Vercel (Frontend)  ──API──►  Your PC (Backend)  ──►  YouTube
+ytm3.vercel.app              Flask + yt-dlp             Home IP
 ```
 
-The frontend is hosted on Vercel. The backend runs on your PC and is exposed to the internet via a tunnel (ngrok / Cloudflare Tunnel). This way, all YouTube API requests originate from your home IP, avoiding cloud-IP blocks.
+- **Frontend** is hosted on Vercel (static files).
+- **Backend** runs on your PC, exposed via Cloudflare Tunnel.
+- All YouTube requests originate from your home IP — no cloud-IP blocks.
 
 ---
 
 ## Tech Stack
 
-- **Backend**: Python 3.10+, Flask, Flask-CORS, `yt-dlp`, `requests`, `gunicorn`
-- **Frontend**: HTML5, Vanilla CSS3 (Custom Design System), JavaScript (ES6+)
+- **Backend**: Python, Flask, Flask-CORS, `yt-dlp`, `requests`
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Icons & Typography**: Font Awesome 6, Google Fonts (Poppins)
 
 ---
 
-## Quick Start (Local Development)
+## Setup
 
-### 1. Clone the repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/aluukill/YTm3.git
 cd YTm3
-```
-
-### 2. Set up a virtual environment (optional but recommended)
-
-```bash
 python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
+venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 ```
 
-### 4. Configure YouTube cookies (required)
+### 2. YouTube cookies
 
-YouTube blocks unauthenticated requests. You must provide a `COOKIES.txt` file with your YouTube session cookies so `yt-dlp` can authenticate.
+Export your YouTube cookies in Netscape format using a browser extension ([Chrome](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid), [Firefox](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/)) and save as `COOKIES.txt` in the project root.
 
-1. Install a browser extension:
-   - [Get COOKIES.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid) (Chrome)
-   - [COOKIES.txt](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/) (Firefox)
-2. Log into **youtube.com** in your browser.
-3. Use the extension to export your cookies for `youtube.com` in **Netscape format**.
-4. Save the exported file as **`COOKIES.txt`** in the project root directory.
-
-> A pre-configured `COOKIES.txt` is included in the repository. If yours expires, replace it with a fresh export.
-
-### 5. Run the development server
+### 3. Run the backend
 
 ```bash
 python app.py
 ```
 
-Open [http://localhost:5000](http://localhost:5000) in your web browser.
+### 4. Expose to internet (Cloudflare Tunnel)
 
----
+Download [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) and run:
 
-## Hybrid Deployment (Vercel + Your PC)
-
-This is the recommended setup. The frontend runs on Vercel while your PC serves as the backend, using your home IP for YouTube requests.
-
-### Step 1 — Deploy frontend to Vercel
-
-1. Push your repo to GitHub.
-2. Go to [vercel.com](https://vercel.com), import the repo.
-3. Vercel will detect the static frontend and deploy it to `ytm3.vercel.app`.
-4. No special build settings needed — `vercel.json` handles this automatically.
-
-### Step 2 — Run backend on your PC
-
-```bash
-pip install -r requirements.txt
-python app.py
-```
-
-The Flask server starts on `http://localhost:5000`.
-
-### Step 3 — Expose your PC to the internet
-
-Use **ngrok** or **Cloudflare Tunnel** to give your local server a public URL:
-
-**Option A — ngrok:**
-```bash
-ngrok http 5000
-```
-This gives you a URL like `https://abc123.ngrok-free.app`.
-
-**Option B — Cloudflare Tunnel:**
 ```bash
 cloudflared tunnel --url http://localhost:5000
 ```
-This gives you a URL like `https://your-tunnel.trycloudflare.com`.
 
-### Step 4 — Update frontend config
+This gives you a public URL like `https://xxx.trycloudflare.com`.
 
-Edit `config.js` and set your tunnel URL:
+### 5. Configure the frontend
+
+Edit `config.js` with your tunnel URL:
 
 ```js
-const BACKEND_URL = "https://abc123.ngrok-free.app";
+const BACKEND_URL = "https://xxx.trycloudflare.com";
 ```
 
-Commit and push. Vercel auto-deploys. Your frontend now sends API requests to your PC.
+### 6. Deploy frontend to Vercel
+
+Push to GitHub, import the repo on [vercel.com](https://vercel.com). It auto-deploys as a static site.
 
 ---
 
-## Local Development (Full Stack on One Machine)
+## API
 
-When `BACKEND_URL` is empty in `config.js`, the frontend uses relative paths (`/api/...`) and the Flask server serves everything. This is the default for local development.
-
----
-
-## API Reference
-
-### `GET /api/status`
-
-Health check endpoint. Returns `{"status": "ok"}`.
-
-### `POST /api/info`
-
-Fetches video metadata (title, author, thumbnail, duration, audio streams).
-
-- **Body**: `{"url": "https://www.youtube.com/watch?v=..."}`
-- **Response**: JSON metadata object.
-
-### `GET /api/stream`
-
-Streams the raw highest quality audio for inline HTML5 preview.
-
-- **Query Param**: `?url=...`
-
-### `GET /api/download`
-
-Downloads the highest quality audio track as a file attachment.
-
-- **Query Param**: `?url=...`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/status` | Health check |
+| `POST` | `/api/info` | Fetch video metadata (title, thumbnail, duration, audio formats) |
+| `GET` | `/api/stream?url=...` | Stream audio for inline preview |
+| `GET` | `/api/download?url=...` | Download audio as file attachment |
 
 ---
 
 ## Project Structure
 
-```text
+```
 YTm3/
-├── app.py              # Flask backend server & yt-dlp wrapper
-├── config.js           # Backend URL configuration for frontend
-├── index.html          # Frontend web layout
-├── style.css           # Custom CSS design system
-├── script.js           # Client-side logic & API integration
-├── COOKIES.txt         # YouTube session cookies (Netscape format)
-├── logo.png            # App logo asset
-├── vercel.json         # Vercel deployment config (static frontend)
+├── app.py              # Flask API server & yt-dlp wrapper
+├── config.js           # Backend URL for frontend
+├── index.html          # Frontend
+├── style.css           # Styles
+├── script.js           # Client-side logic
+├── COOKIES.txt         # YouTube session cookies
+├── logo.png            # Logo
+├── vercel.json         # Vercel static deployment config
 ├── requirements.txt    # Python dependencies
-├── Procfile            # Deployment process definition
-├── .gitignore          # Git exclusion rules
-└── README.md           # Documentation
+├── .gitignore
+└── README.md
 ```
 
 ---
 
 ## License
 
-This project is open-source and available under the [MIT License](LICENSE).
+[MIT](LICENSE)
