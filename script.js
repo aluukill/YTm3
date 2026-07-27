@@ -67,7 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function extractVideoId(url) {
     if (!url) return null;
     const str = url.trim();
-    const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/;
+    const regExp =
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/;
     const match = str.match(regExp);
     if (match && match[1]) return match[1];
 
