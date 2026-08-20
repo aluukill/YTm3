@@ -9,6 +9,7 @@ A lightweight web application to download audio from YouTube videos in maximum a
 ## Features
 
 - **Max Quality Extraction** — Automatically streams the highest available bitrate audio from YouTube.
+- **MP3 Output** — Audio is transcoded to a real MP3 using a bundled FFmpeg binary.
 - **Universal Link Support** — Videos, shorts, live streams, and music.youtube.com.
 - **Audio Preview** — Built-in HTML5 player for previewing before download.
 - **Download History** — Recent conversions saved in browser localStorage.
@@ -68,7 +69,7 @@ Visit [http://localhost:5000](http://localhost:5000) — paste a YouTube URL and
 | `POST` | `/api/download` | Download the audio server-side and register a file token |
 | `GET` | `/api/file/<id>` | Stream the prepared audio (`?download=1` forces a download) |
 
-The server downloads the audio with `yt-dlp` (handling YouTube's signature, PO-token, and SABR checks automatically) and streams it straight to the browser. No proxying through third parties.
+The server downloads the audio with `yt-dlp` (handling YouTube's signature, PO-token, and SABR checks automatically), transcodes it to MP3 with a bundled FFmpeg binary (`imageio-ffmpeg`), and streams it straight to the browser. No proxying through third parties.
 
 ---
 

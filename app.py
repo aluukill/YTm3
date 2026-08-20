@@ -1,5 +1,6 @@
 import os
 import re
+import glob
 import time
 import uuid
 import tempfile
@@ -8,6 +9,7 @@ import threading
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 import yt_dlp
+from imageio_ffmpeg import get_ffmpeg_exe
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,6 +21,7 @@ os.makedirs(AUDIO_DIR, exist_ok=True)
 
 AUDIO_FILES = {}
 AUDIO_TTL_SECONDS = 3 * 60 * 60
+FFMPEG_PATH = get_ffmpeg_exe()
 
 app = Flask(__name__, static_folder=BASE_DIR, static_url_path='')
 CORS(app, origins=[
@@ -164,18 +167,25 @@ def download_audio():
     token = uuid.uuid4().hex
     opts = _base_ydl_opts(format_selector='bestaudio/best')
     opts['outtmpl'] = os.path.join(AUDIO_DIR, token + '.%(ext)s')
+    opts['ffmpeg_location'] = FFMPEG_PATH
+    opts['postprocessors'] = [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+        'preferredquality': '0',
+    }]
 
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=True)
             if 'entries' in info and len(info['entries']) > 0:
                 info = info['entries'][0]
-            filepath = ydl.prepare_filename(info)
 
-        if not os.path.isfile(filepath):
+        produced = glob.glob(os.path.join(AUDIO_DIR, token + '.*'))
+        if not produced:
             raise RuntimeError('No audio file was produced.')
+        filepath = max(produced, key=os.path.getmtime)
 
-        ext = os.path.splitext(filepath)[1].lstrip('.') or 'm4a'
+        ext = os.path.splitext(filepath)[1].lstrip('.') or 'mp3'
         filename = f"{_safe_filename(info.get('title') or 'audio')}.{ext}"
         AUDIO_FILES[token] = {
             'path': filepath,
