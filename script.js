@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const videoDuration = document.getElementById("video-duration");
   const audioPreview = document.getElementById("audio-preview");
   const downloadActionBtn = document.getElementById("download-action-btn");
+  const downloadBtnIcon = downloadActionBtn.querySelector("i");
+  const downloadBtnText = downloadActionBtn.querySelector("span");
   const copyLinkBtn = document.getElementById("copy-link-btn");
   const historySection = document.getElementById("history-section");
   const historyList = document.getElementById("history-list");
@@ -120,8 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
         duration: data.duration || "00:00",
         thumbnail:
           data.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-        stream_url: data.stream_url,
-        ext: data.ext || "m4a",
       };
 
       videoThumb.src = currentVideoData.thumbnail;
@@ -129,21 +129,65 @@ document.addEventListener("DOMContentLoaded", () => {
       videoChannel.textContent = currentVideoData.author;
       videoDuration.textContent = currentVideoData.duration;
 
-      audioPreview.src = currentVideoData.stream_url;
-      downloadActionBtn.href = currentVideoData.stream_url;
-      downloadActionBtn.download = `${currentVideoData.title}.${currentVideoData.ext}`;
-      downloadActionBtn.removeAttribute("target");
-
       skeletonCard.classList.add("hidden");
       resultCard.classList.remove("hidden");
+
+      setDownloadPreparing(true);
+      const prepared = await prepareAudio(cleanUrl);
+      if (!prepared) return;
+
+      audioPreview.src = `/api/file/${prepared.file_id}`;
+      downloadActionBtn.href = `/api/file/${prepared.file_id}?download=1`;
+      downloadActionBtn.download = prepared.filename;
+      downloadActionBtn.removeAttribute("target");
+      setDownloadPreparing(false);
 
       saveToHistory(currentVideoData, "Max Quality");
       showToast("Audio ready for instant download!", "success");
     } catch (err) {
       skeletonCard.classList.add("hidden");
       showToast(err.message || "Failed to extract YouTube audio.", "error");
+      setDownloadPreparing(false);
     } finally {
       submitBtn.disabled = false;
+    }
+  }
+
+  async function prepareAudio(url) {
+    try {
+      const response = await fetch("/api/download", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: url }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to prepare audio");
+      }
+
+      const data = await response.json();
+      if (!data.file_id) {
+        throw new Error("Failed to prepare audio");
+      }
+      return data;
+    } catch (err) {
+      showToast(err.message || "Failed to prepare audio.", "error");
+      return null;
+    }
+  }
+
+  function setDownloadPreparing(preparing) {
+    if (preparing) {
+      downloadBtnIcon.className = "fa-solid fa-spinner fa-spin";
+      downloadBtnText.textContent = "Preparing audio...";
+      downloadActionBtn.classList.add("disabled");
+    } else {
+      downloadBtnIcon.className = "fa-solid fa-download";
+      downloadBtnText.textContent = "Download Audio";
+      downloadActionBtn.classList.remove("disabled");
     }
   }
 

@@ -23,7 +23,7 @@ Your Browser  ──►  Flask + yt-dlp  ──►  YouTube
 localhost:5000        (runs locally)       Home IP
 ```
 
-The entire app runs locally on your machine. All YouTube requests originate from your home IP — no cookies, tokens, or cloud accounts required.
+The entire app runs locally on your machine. When you request a download, the local server extracts and downloads the audio from YouTube with `yt-dlp`, then streams the finished file to your browser. All YouTube requests originate from your home IP — no cookies, tokens, or cloud accounts required.
 
 ---
 
@@ -64,9 +64,11 @@ Visit [http://localhost:5000](http://localhost:5000) — paste a YouTube URL and
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/status` | Health check |
-| `POST` | `/api/info` | Fetch video metadata + direct stream URL |
+| `POST` | `/api/info` | Fetch video metadata (title, author, duration, thumbnail) |
+| `POST` | `/api/download` | Download the audio server-side and register a file token |
+| `GET` | `/api/file/<id>` | Stream the prepared audio (`?download=1` forces a download) |
 
-The `/api/info` response includes a `stream_url` field pointing directly to YouTube's CDN. The browser downloads audio straight from YouTube — no proxying through the backend.
+The server downloads the audio with `yt-dlp` (handling YouTube's signature, PO-token, and SABR checks automatically) and streams it straight to the browser. No proxying through third parties.
 
 ---
 

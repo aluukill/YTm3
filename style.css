@@ -392,6 +392,12 @@ body {
   box-shadow: none;
 }
 
+.download-now-btn.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 .secondary-action-btn {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
