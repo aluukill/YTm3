@@ -19,19 +19,17 @@ A lightweight web application to download audio from YouTube videos in maximum a
 ## Architecture
 
 ```
-Vercel (Frontend)  ──API──►  Your PC (Backend)  ──►  YouTube
-ytm3.vercel.app              Flask + yt-dlp             Home IP
+Your Browser  ──►  Flask + yt-dlp  ──►  YouTube
+localhost:5000        (runs locally)       Home IP
 ```
 
-- **Frontend** is hosted on Vercel (static files).
-- **Backend** runs on your PC, exposed via Cloudflare Tunnel.
-- All YouTube requests originate from your home IP — no cloud-IP blocks.
+The entire app runs locally on your machine. All YouTube requests originate from your home IP — no cookies, tokens, or cloud accounts required.
 
 ---
 
 ## Tech Stack
 
-- **Backend**: Python, Flask, Flask-CORS, `yt-dlp`, `requests`
+- **Backend**: Python, Flask, Flask-CORS, `yt-dlp`
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Icons & Typography**: Font Awesome 6, Google Fonts (Poppins)
 
@@ -49,37 +47,15 @@ venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 ```
 
-### 2. YouTube cookies
-
-Export your YouTube cookies in Netscape format using a browser extension ([Chrome](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid), [Firefox](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/)) and save as `COOKIES.txt` in the project root.
-
-### 3. Run the backend
+### 2. Run the app
 
 ```bash
 python app.py
 ```
 
-### 4. Expose to internet (Cloudflare Tunnel)
+### 3. Open in your browser
 
-Download [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) and run:
-
-```bash
-cloudflared tunnel --url http://localhost:5000
-```
-
-This gives you a public URL like `https://xxx.trycloudflare.com`.
-
-### 5. Configure the frontend
-
-Edit `config.js` with your tunnel URL:
-
-```js
-const BACKEND_URL = "https://xxx.trycloudflare.com";
-```
-
-### 6. Deploy frontend to Vercel
-
-Push to GitHub, import the repo on [vercel.com](https://vercel.com). It auto-deploys as a static site.
+Visit [http://localhost:5000](http://localhost:5000) — paste a YouTube URL and download the audio. The app serves both the frontend and the API from the same local server.
 
 ---
 
@@ -98,14 +74,11 @@ The `/api/info` response includes a `stream_url` field pointing directly to YouT
 
 ```
 YTm3/
-├── app.py              # Flask API server & yt-dlp wrapper
-├── config.js           # Backend URL for frontend
+├── app.py              # Flask app: API server, yt-dlp wrapper & static frontend
 ├── index.html          # Frontend
 ├── style.css           # Styles
 ├── script.js           # Client-side logic
-├── COOKIES.txt         # YouTube session cookies
 ├── logo.png            # Logo
-├── vercel.json         # Vercel static deployment config
 ├── requirements.txt    # Python dependencies
 ├── .gitignore
 └── README.md

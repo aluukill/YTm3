@@ -1,29 +1,24 @@
 import os
-import tempfile
-import atexit
-import shutil
 import logging
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import yt_dlp
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(__name__, static_folder=BASE_DIR, static_url_path='')
 CORS(app, origins=[
-    'https://ytm3.vercel.app',
     'http://localhost:5000',
     'http://127.0.0.1:5000',
 ])
 
-COOKIE_FILE = None
-if os.path.exists('COOKIES.txt'):
-    dst = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
-    shutil.copy2('COOKIES.txt', dst.name)
-    dst.close()
-    COOKIE_FILE = dst.name
-    atexit.register(lambda p=COOKIE_FILE: os.unlink(p))
+
+@app.route('/')
+def index():
+    return send_from_directory(BASE_DIR, 'index.html')
 
 
 def _base_ydl_opts(format_selector=None):
@@ -39,8 +34,6 @@ def _base_ydl_opts(format_selector=None):
     }
     if format_selector:
         opts['format'] = format_selector
-    if COOKIE_FILE and os.path.exists(COOKIE_FILE):
-        opts['cookiefile'] = COOKIE_FILE
     return opts
 
 def format_duration(seconds):
@@ -54,12 +47,12 @@ def format_duration(seconds):
 
 
 ERROR_GUESS = {
-    'sign in': 'YouTube cookies have expired or are invalid. Please export fresh cookies from your browser and replace COOKIES.txt.',
-    'not a bot': 'YouTube is blocking requests due to suspected bot activity. Please export fresh cookies from your browser and replace COOKIES.txt.',
+    'sign in': 'This video requires YouTube sign-in, which is not supported without cookies. Try another video.',
+    'not a bot': 'YouTube is blocking the request. Wait a moment and try again, or try another video.',
     'no video formats': 'No downloadable formats found for this video.',
     'no audio stream': 'No audio stream is available for this video.',
     'requested format': 'The requested format is not available. Trying alternative sources...',
-    'geo': 'This video is geo-restricted and cannot be accessed with the current cookies.',
+    'geo': 'This video is geo-restricted and cannot be accessed from your location.',
 }
 
 
